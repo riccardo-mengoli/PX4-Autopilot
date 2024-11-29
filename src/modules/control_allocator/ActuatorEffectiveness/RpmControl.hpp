@@ -44,6 +44,7 @@
 #pragma once
 
 #include <lib/mathlib/math/filter/AlphaFilter.hpp>
+#include <lib/mathlib/math/filter/MedianFilter.hpp>
 #include <lib/pid/PID.hpp>
 
 #include <uORB/Publication.hpp>
@@ -93,7 +94,7 @@ public:
 		_timestamp_last_update = now;
 
 		_rpm_filter.setParameters(dt, 0.5f);
-		_rpm_filter.update(_rpm_raw);
+		_rpm_filter.update(_rpm_median_filter.apply(_rpm_raw));
 
 		const bool no_rpm_pulse_timeout = now < (_timestamp_last_rpm_measurement + 1_s);
 		const bool no_excessive_rpm = _rpm_filter.getState() < 1800.f;
@@ -137,6 +138,7 @@ private:
 
 	float _rpm_raw{0.f};
 	float _spoolup_progress{0.f};
+	MedianFilter<float, 5> _rpm_median_filter;
 	AlphaFilter<float> _rpm_filter;
 	PID _pid;
 	hrt_abstime _timestamp_last_update{0};
